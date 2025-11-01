@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Messenger E2EE Dashboard</title>
+  <style>
+    body {
+      background: linear-gradient(135deg, #00c6ff, #0072ff);
+      font-family: 'Poppins', sans-serif;
+      color: #fff;
+      text-align: center;
+      padding: 40px;
+    }
+    h1 { font-size: 28px; text-shadow: 1px 1px 4px #000; }
+    textarea, input {
+      width: 80%; padding: 10px; margin: 10px;
+      border-radius: 10px; border: none; font-size: 14px;
+    }
+    button {
+      background: #fff; color: #333; font-weight: 600;
+      border: none; border-radius: 25px;
+      padding: 10px 30px; margin: 5px;
+      cursor: pointer; transition: 0.3s;
+    }
+    button:hover { transform: scale(1.05); }
+    #status {
+      margin-top: 20px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 10px;
+      padding: 10px;
+      width: 70%;
+      display: inline-block;
+    }
+    #msgfile {
+      margin: 15px;
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+  <h1>💬 Messenger E2EE Panel</h1>
+  <textarea id="cookie" rows="3" placeholder="Paste Facebook Cookie here..."></textarea><br>
+  <textarea id="targets" rows="3" placeholder="Enter target thread IDs (one per line)..."></textarea><br>
+  
+  <textarea id="message" rows="3" placeholder="Enter your message..."></textarea><br>
+
+  <div>
+    <label for="msgfile">📄 Or Select Message File (.txt):</label>
+    <input type="file" id="msgfile" accept=".txt" onchange="uploadFile()">
+  </div>
+
+  <button onclick="startBot()">🚀 Start</button>
+  <button onclick="stopBot()">🛑 Stop</button>
+  <div id="status">Status: Idle</div>
+
+  <script>
+    async function uploadFile() {
+      const fileInput = document.getElementById('msgfile')
+      const formData = new FormData()
+      formData.append('file', fileInput.files[0])
+      const res = await fetch('/upload', { method: 'POST', body: formData })
+      const data = await res.json()
+      if (data.message) {
+        document.getElementById('message').value = data.message
+        alert('✅ Message file loaded successfully!')
+      } else {
+        alert('❌ Invalid file format.')
+      }
+    }
+
+    async function startBot() {
+      const cookie = document.getElementById('cookie').value
+      const targets = document.getElementById('targets').value
+      const message = document.getElementById('message').value
+      document.getElementById('status').innerText = 'Status: Starting...'
+      const res = await fetch('/start', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({cookie, targets, message})
+      })
+      const data = await res.json()
+      document.getElementById('status').innerText = 'Status: ' + data.status
+    }
+
+    async function stopBot() {
+      const res = await fetch('/stop', {method: 'POST'})
+      const data = await res.json()
+      document.getElementById('status').innerText = 'Status: ' + data.status
+    }
+  </script>
+</body>
+</html>
